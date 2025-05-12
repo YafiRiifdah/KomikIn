@@ -1,22 +1,18 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import {
-  getPopularManga,
-  getLatestUpdates,
-  getGenres
-} from '../api/mangadexservice';
+import { getPopularManga, searchManga } from '../api/mangaApi';
+import { getLatestUpdates } from '../api/updatesApi';
+import { getGenres } from '../api/genresApi';
 
 // Import components
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 
 const Home = () => {
-  // Data states
   const [popularManga, setPopularManga] = useState([]);
   const [latestUpdates, setLatestUpdates] = useState([]);
   const [genres, setGenres] = useState([]);
 
-  // Loading and error states
   const [isLoading, setIsLoading] = useState({
     popular: true,
     latest: true,
@@ -28,13 +24,12 @@ const Home = () => {
     genres: null
   });
 
-  // Fetch popular manga on component mount
   useEffect(() => {
-    const fetchPopular = async () => {
+    const fetchData = async () => {
       try {
         setIsLoading(prev => ({ ...prev, popular: true }));
-        const data = await getPopularManga(7); // Fetch 7 popular manga
-        setPopularManga(data);
+        const popularData = await getPopularManga(7);
+        setPopularManga(popularData);
         setError(prev => ({ ...prev, popular: null }));
       } catch (err) {
         setError(prev => ({ ...prev, popular: 'Gagal memuat manga populer' }));
@@ -42,17 +37,40 @@ const Home = () => {
       } finally {
         setIsLoading(prev => ({ ...prev, popular: false }));
       }
+
+      try {
+        setIsLoading(prev => ({ ...prev, latest: true }));
+        const latestData = await getLatestUpdates(8);
+        setLatestUpdates(latestData);
+        setError(prev => ({ ...prev, latest: null }));
+      } catch (err) {
+        setError(prev => ({ ...prev, latest: 'Gagal memuat update terbaru' }));
+        console.error(err);
+      } finally {
+        setIsLoading(prev => ({ ...prev, latest: false }));
+      }
+
+      try {
+        setIsLoading(prev => ({ ...prev, genres: true }));
+        const genresData = await getGenres();
+        setGenres(genresData);
+        setError(prev => ({ ...prev, genres: null }));
+      } catch (err) {
+        setError(prev => ({ ...prev, genres: 'Gagal memuat genre' }));
+        console.error(err);
+      } finally {
+        setIsLoading(prev => ({ ...prev, genres: false }));
+      }
     };
 
-    fetchPopular();
+    fetchData();
   }, []);
 
-  // Fetch latest updates on component mount
   useEffect(() => {
     const fetchLatest = async () => {
       try {
         setIsLoading(prev => ({ ...prev, latest: true }));
-        const data = await getLatestUpdates(8); // Fetch 8 latest updates
+        const data = await getLatestUpdates(8);
         setLatestUpdates(data);
         setError(prev => ({ ...prev, latest: null }));
       } catch (err) {
@@ -64,41 +82,20 @@ const Home = () => {
     };
 
     fetchLatest();
-  }, []);
+    const intervalId = setInterval(fetchLatest, 300000);
 
-  // Fetch genres on component mount
-  useEffect(() => {
-    const fetchGenres = async () => {
-      try {
-        setIsLoading(prev => ({ ...prev, genres: true }));
-        const data = await getGenres();
-        setGenres(data);
-        setError(prev => ({ ...prev, genres: null }));
-      } catch (err) {
-        setError(prev => ({ ...prev, genres: 'Gagal memuat genre' }));
-        console.error(err);
-      } finally {
-        setIsLoading(prev => ({ ...prev, genres: false }));
-      }
-    };
-
-    fetchGenres();
+    return () => clearInterval(intervalId);
   }, []);
 
   return (
     <div className="bg-gray-900 text-white min-h-screen">
-      {/* Navbar Component */}
       <Navbar />
-
-      {/* Main Content - Responsive */}
       <main className="max-w-6xl mx-auto px-4 py-6 sm:py-8">
-        {/* Manga Populer Section */}
         <section className="mb-8 sm:mb-12">
           <div className="flex justify-between items-center mb-4 sm:mb-6 pb-2 border-b border-gray-700">
             <h2 className="text-lg sm:text-xl font-bold text-orange-500">Manga Populer</h2>
             <Link to="/all-popular" className="text-gray-400 text-xs sm:text-sm hover:text-orange-500">Lihat Semua</Link>
           </div>
-
           {isLoading.popular ? (
             <div className="flex justify-center py-16 sm:py-20">
               <div className="animate-spin rounded-full h-10 w-10 sm:h-12 sm:w-12 border-b-2 border-orange-500"></div>
@@ -124,14 +121,11 @@ const Home = () => {
             </div>
           )}
         </section>
-
-        {/* Update Terbaru Section */}
         <section className="mb-8 sm:mb-12">
           <div className="flex justify-between items-center mb-4 sm:mb-6 pb-2 border-b border-gray-700">
             <h2 className="text-lg sm:text-xl font-bold text-orange-500">Update Terbaru</h2>
             <a href="#" className="text-gray-400 text-xs sm:text-sm hover:text-orange-500">Lihat Semua</a>
           </div>
-
           {isLoading.latest ? (
             <div className="flex justify-center py-16 sm:py-20">
               <div className="animate-spin rounded-full h-10 w-10 sm:h-12 sm:w-12 border-b-2 border-orange-500"></div>
@@ -161,14 +155,11 @@ const Home = () => {
             </div>
           )}
         </section>
-
-        {/* Genre Section */}
         <section className="mb-8 sm:mb-12">
           <div className="flex justify-between items-center mb-4 sm:mb-6 pb-2 border-b border-gray-700">
             <h2 className="text-lg sm:text-xl font-bold text-orange-500">Genre</h2>
             <a href="#" className="text-gray-400 text-xs sm:text-sm hover:text-orange-500">Lihat Semua</a>
           </div>
-
           {isLoading.genres ? (
             <div className="flex justify-center py-10">
               <div className="animate-spin rounded-full h-10 w-10 sm:h-12 sm:w-12 border-b-2 border-orange-500"></div>
@@ -191,11 +182,7 @@ const Home = () => {
           )}
         </section>
       </main>
-
-      {/* Footer Component */}
       <Footer />
-
-      {/* Back to top button */}
       <button
         onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
         className="fixed bottom-6 right-6 bg-blue-600 hover:bg-blue-700 text-white rounded-full p-3 shadow-lg"

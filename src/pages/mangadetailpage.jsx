@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { getMangaById, getMangaChapters } from '../api/mangadexservice';
+import { addBookmark, addHistory, isBookmarked, removeBookmark } from '../api/authApi';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
+import Modal from '../components/ui/Modal';
 
 const MangaDetailPage = () => {
   const { id } = useParams();
@@ -12,8 +14,12 @@ const MangaDetailPage = () => {
   const [chapters, setChapters] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [activeTab, setActiveTab] = useState('info'); // 'info' or 'chapters' for mobile view
-  
+  const [activeTab, setActiveTab] = useState('info');
+  const [isMangaBookmarked, setIsMangaBookmarked] = useState(false);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [modalMessage, setModalMessage] = useState('');
+  const [isSuccess, setIsSuccess] = useState(true);
+
   useEffect(() => {
     const fetchMangaDetails = async () => {
       try {
@@ -22,13 +28,14 @@ const MangaDetailPage = () => {
         
         console.log(`Fetching details for manga ID: ${id}`);
         
-        // Load manga data
         const mangaData = await getMangaById(id);
         setManga(mangaData);
         
-        // Load manga chapters
         const chaptersData = await getMangaChapters(id);
         setChapters(chaptersData);
+        
+        addHistory(id, mangaData.title);
+        setIsMangaBookmarked(isBookmarked(id));
         
         console.log(`Successfully loaded manga details and ${chaptersData.length} chapters`);
       } catch (err) {
@@ -41,8 +48,7 @@ const MangaDetailPage = () => {
     
     fetchMangaDetails();
   }, [id]);
-  
-  // Retry loading
+
   const retryLoading = () => {
     setIsLoading(true);
     setError(null);
@@ -52,11 +58,35 @@ const MangaDetailPage = () => {
     }, 1000);
   };
   
-  // Toggle between info and chapters tabs on mobile
   const toggleTab = (tab) => {
     setActiveTab(tab);
   };
-  
+
+  const handleBookmarkToggle = async () => {
+    try {
+      if (isMangaBookmarked) {
+        removeBookmark(id);
+        setIsMangaBookmarked(false);
+        setModalMessage(`Manga ${manga.title} telah dihapus dari bookmark!`);
+      } else {
+        addBookmark(id, manga.title);
+        setIsMangaBookmarked(true);
+        setModalMessage(`Manga ${manga.title} telah ditambahkan ke bookmark!`);
+      }
+      setIsSuccess(true);
+      setIsModalOpen(true);
+    } catch (err) {
+      console.error('Gagal mengelola bookmark:', err);
+      setModalMessage('Gagal mengelola bookmark. Silakan coba lagi.');
+      setIsSuccess(false);
+      setIsModalOpen(true);
+    }
+  };
+
+  const closeModal = () => {
+    setIsModalOpen(false);
+  };
+
   if (isLoading) {
     return (
       <div className="bg-gray-900 text-white min-h-screen flex items-center justify-center">
@@ -99,10 +129,8 @@ const MangaDetailPage = () => {
   
   return (
     <div className="bg-gray-900 text-white min-h-screen">
-      {/* Navbar */}
       <Navbar />
       
-      {/* Custom Header */}
       <header className="bg-gray-900 border-b border-gray-800 py-4">
         <div className="max-w-6xl mx-auto px-4">
           <div className="flex items-center gap-4">
@@ -117,9 +145,7 @@ const MangaDetailPage = () => {
         </div>
       </header>
       
-      {/* Manga Info Section - Responsive */}
       <main className="max-w-6xl mx-auto px-4 py-6">
-        {/* Mobile Tabs Navigation */}
         <div className="flex md:hidden mb-4 border-b border-gray-700">
           <button 
             onClick={() => toggleTab('info')}
@@ -135,24 +161,28 @@ const MangaDetailPage = () => {
           </button>
         </div>
         
-        {/* Content Section based on active tab for mobile, and full content for desktop */}
         <div className="flex flex-col md:flex-row gap-6">
-          {/* Left Column: Cover Art - Always visible on desktop, but only on info tab on mobile */}
           {(activeTab === 'info' || window.innerWidth >= 768) && (
             <div className="w-full md:w-1/3 lg:w-1/4 flex-shrink-0">
               <div className="bg-gray-800 rounded-lg overflow-hidden shadow-lg">
                 <img 
-                  src={manga.coverArt || '/api/placeholder/400/600'} 
+                  src={manga.coverArt || 'https://via.placeholder.com/400x600'} 
                   alt={manga.title} 
                   className="w-full h-auto object-cover"
                 />
               </div>
+              <button
+                onClick={handleBookmarkToggle}
+                className={`mt-4 w-full py-2 rounded text-white transition-colors ${
+                  isMangaBookmarked ? 'bg-red-600 hover:bg-red-700' : 'bg-blue-600 hover:bg-blue-700'
+                }`}
+              >
+                {isMangaBookmarked ? 'Hapus dari Bookmark' : 'Tambah ke Bookmark'}
+              </button>
             </div>
           )}
           
-          {/* Right Column: Content that changes based on active tab on mobile, shows both on desktop */}
           <div className="w-full md:w-2/3 lg:w-3/4">
-            {/* Manga Details - Visible on "info" tab on mobile, always visible on desktop */}
             {(activeTab === 'info' || window.innerWidth >= 768) && (
               <div className="mb-8 md:mb-10">
                 <h1 className="text-xl md:text-2xl lg:text-3xl font-bold mb-4 md:hidden">
@@ -207,7 +237,6 @@ const MangaDetailPage = () => {
               </div>
             )}
             
-            {/* Chapters Section - Visible on "chapters" tab on mobile, always visible on desktop */}
             {(activeTab === 'chapters' || window.innerWidth >= 768) && (
               <div>
                 <div className="flex justify-between items-center mb-4 md:mb-6 pb-2 border-b border-gray-700">
@@ -259,7 +288,13 @@ const MangaDetailPage = () => {
         </div>
       </main>
       
-      {/* Footer */}
+      <Modal
+        isOpen={isModalOpen}
+        message={modalMessage}
+        isSuccess={isSuccess}
+        onClose={closeModal}
+      />
+      
       <Footer />
     </div>
   );
