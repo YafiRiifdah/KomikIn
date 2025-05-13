@@ -46,7 +46,7 @@ const Footer = () => {
         </div>
         
         <div className="text-center mt-6 sm:mt-8 pt-6 border-t border-gray-700">
-          <p className="text-xs sm:text-sm">&copy; {new Date().getFullYear()} MangaKu. Semua hak dilindungi.</p>
+          <p className="text-xs sm:text-sm">&copy; {new Date().getFullYear()} KommikIn. Semua hak dilindungi.</p>
         </div>
       </div>
     </footer>

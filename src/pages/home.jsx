@@ -1,8 +1,10 @@
+// src/pages/Home.jsx
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { getPopularManga, searchManga } from '../api/mangaApi';
 import { getLatestUpdates } from '../api/updatesApi';
 import { getGenres } from '../api/genresApi';
+import LatestUpdatesPage from './LatestUpdatespage';
 
 // Import components
 import Navbar from '../components/Navbar';
@@ -124,7 +126,7 @@ const Home = () => {
         <section className="mb-8 sm:mb-12">
           <div className="flex justify-between items-center mb-4 sm:mb-6 pb-2 border-b border-gray-700">
             <h2 className="text-lg sm:text-xl font-bold text-orange-500">Update Terbaru</h2>
-            <a href="#" className="text-gray-400 text-xs sm:text-sm hover:text-orange-500">Lihat Semua</a>
+            <Link to="/latest-updates" className="text-gray-400 text-xs sm:text-sm hover:text-orange-500">Lihat Semua</Link>
           </div>
           {isLoading.latest ? (
             <div className="flex justify-center py-16 sm:py-20">
@@ -170,13 +172,14 @@ const Home = () => {
             </div>
           ) : (
             <div className="flex flex-wrap gap-2">
-              {genres.map((genre, index) => (
-                <div
-                  key={index}
+              {genres.map((genre) => (
+                <Link
+                  key={genre.id}
+                  to={`/genre/${genre.id}`}
                   className="bg-gray-800 text-white px-3 py-1 sm:px-4 sm:py-2 rounded-full text-xs sm:text-sm cursor-pointer hover:bg-orange-500 transition-colors"
                 >
-                  {genre}
-                </div>
+                  {genre.name}
+                </Link>
               ))}
             </div>
           )}

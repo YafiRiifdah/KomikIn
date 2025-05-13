@@ -1,3 +1,4 @@
+// src/api/mangaApi.js
 import { API_BASE_URL, fetchWithRetry } from './apiClient';
 
 // Mengambil data manga berdasarkan ID
@@ -91,5 +92,35 @@ export const getPopularManga = async (limit = 10, offset = 0) => {
   } catch (error) {
     console.error(`Error fetching popular manga:`, error);
     throw new Error(`Failed to load popular manga: ${error.message}`);
+  }
+};
+
+// Mengambil daftar manga berdasarkan genre
+export const searchMangaByGenre = async (genreId, limit = 50, offset = 0) => {
+  try {
+    console.log(`Fetching manga by genre ID: ${genreId}, limit: ${limit}, offset: ${offset}`);
+    const response = await fetchWithRetry(
+      `${API_BASE_URL}/manga?includedTags[]=${genreId}&limit=${limit}&offset=${offset}&includes[]=cover_art`
+    );
+
+    if (!response.data || !Array.isArray(response.data)) {
+      throw new Error('Invalid manga data format for genre');
+    }
+
+    return response.data.map(manga => {
+      const coverArt = manga.relationships.find(rel => rel.type === 'cover_art');
+      const coverFile = coverArt?.attributes?.fileName;
+
+      return {
+        id: manga.id,
+        title: manga.attributes.title.en || Object.values(manga.attributes.title)[0],
+        image: coverFile
+          ? `https://uploads.mangadex.org/covers/${manga.id}/${coverFile}.256.jpg`
+          : '/api/placeholder/200/280'
+      };
+    });
+  } catch (error) {
+    console.error(`Error fetching manga by genre ID ${genreId}:`, error);
+    throw new Error(`Failed to load manga by genre: ${error.message}`);
   }
 };

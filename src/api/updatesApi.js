@@ -3,12 +3,12 @@ import axios from 'axios';
 const BASE_URL = 'https://api.mangadex.org';
 
 // Fungsi untuk mengambil update terbaru
-export const getLatestUpdates = async (limit = 10) => {
+export const getLatestUpdates = async (limit = 10, offset = 0) => {
   try {
     const response = await axios.get(`${BASE_URL}/chapter`, {
       params: {
         limit: limit,
-        offset: 0,
+        offset: offset,
         order: { readableAt: 'desc' },
         includes: ['manga'],
       },

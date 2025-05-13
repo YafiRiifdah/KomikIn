@@ -10,6 +10,8 @@ import Register from './auth/Register';
 import Bookmarks from './pages/Bookmarks';
 import History from './pages/History';
 import Settings from './pages/Settings';
+import LatestUpdatesPage from './pages/LatestUpdatespage';
+import GenrePage from './pages/GenrePage';
 
 function App() {
   return (
@@ -24,6 +26,8 @@ function App() {
         <Route path='/bookmarks' element={<Bookmarks/>} />
         <Route path='/history' element={<History/>} />
         <Route path='/settings' element={<Settings/>} />
+        <Route path='/latest-updates' element={<LatestUpdatesPage/>} />
+        <Route path="/genre/:genreId" element={<GenrePage />} />
         <Route path="*" element={<NotFound />} />
       </Routes>
     </Router>
