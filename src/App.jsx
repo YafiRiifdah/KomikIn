@@ -10,7 +10,7 @@ import Register from './auth/Register';
 import Bookmarks from './pages/Bookmarks';
 import History from './pages/History';
 import Settings from './pages/Settings';
-import LatestUpdatesPage from './pages/LatestUpdates';
+import LatestUpdatesPage from './pages/LatestUpdatespage';
 import GenrePage from './pages/GenrePage';
 
 function App() {

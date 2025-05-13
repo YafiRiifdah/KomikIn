@@ -4,7 +4,7 @@ import { Link } from 'react-router-dom';
 import { getPopularManga, searchManga } from '../api/mangaApi';
 import { getLatestUpdates } from '../api/updatesApi';
 import { getGenres } from '../api/genresApi';
-import LatestUpdatesPage from './LatestUpdates';
+import LatestUpdatesPage from './LatestUpdatespage';
 
 // Import components
 import Navbar from '../components/Navbar';
